@@ -21,4 +21,5 @@ command = [
     f"{URL}/{KEY}"
 ]
 
-subprocess.run(command)
+while True:
+    subprocess.run(command)
