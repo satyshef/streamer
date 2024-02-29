@@ -1,2 +1,2 @@
 ffconcat version 1.0
-file '~/config/streamer/videolist.txt'
+file '/root/config/streamer/videolist.txt'
