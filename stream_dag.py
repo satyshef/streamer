@@ -41,7 +41,7 @@ def create_video_playlist():
         print("small video")
 
     with open(VIDEO_PATH, 'w') as playlist_file:
-            playlist_file.write("DURATION:", current_video_duration)
+            playlist_file.write(f"DURATION:{current_video_duration}")
     return
 """
         playlist_file.write('ffconcat version 1.0\n')
