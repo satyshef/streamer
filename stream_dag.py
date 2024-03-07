@@ -32,6 +32,7 @@ today = datetime.now()
 target_datetime = today.strftime("%Y-%m-%d %H:%M:%S")
 
 def create_video_playlist():
+    global current_video_duration
     clip_duration = 9
     for file in os.listdir(VIDEO_SOURCE_PATH):
         current_video_duration += clip_duration
