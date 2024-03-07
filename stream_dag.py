@@ -39,7 +39,8 @@ def create_video_playlist(video_dir, playlist_path):
     file_list = []
     # проверяем сумарную длительность видео
     for file in os.listdir(video_dir):
-        file_list.append(os.path.join(video_dir, file))
+        file_list.append(file)
+        #file_list.append(os.path.join(video_dir, file))
     
     # записываем в плейлист
     with open(playlist_path, 'w') as playlist_file:
