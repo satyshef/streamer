@@ -25,7 +25,7 @@ URL = "rtmp://live.twitch.tv/app"
 
 
 
-current_video_duration = 0
+video_duration = 0
 os.chdir(DATA_DIR)
 # Устанавливаем target_datetime в начало текущего дня
 today = datetime.now()
@@ -33,15 +33,15 @@ today = datetime.now()
 target_datetime = today.strftime("%Y-%m-%d %H:%M:%S")
 
 def create_video_playlist():
-    global current_video_duration
+    global video_duration
     clip_duration = 9
     file_list = []
     # проверяем сумарную длительность видео
     for file in os.listdir(VIDEO_SOURCE_PATH):
-        current_video_duration += clip_duration
+        video_duration += clip_duration
         file_list.append(file)
 
-    if current_video_duration < MIN_VIDEO_DURATION:
+    if video_duration < MIN_VIDEO_DURATION:
         print("Small video")
         raise AirflowSkipException
     
@@ -84,17 +84,17 @@ with models.DAG(
         python_callable=cleanup_old_files,
         dag=dag,
     )
-"""
+
     ffmpeg_command = [
         "-re", "-f", "concat", "-safe", "0", "-i", VIDEO_PATH,
         "-re", "-f", "concat", "-i", AUDIO_PATH,
         "-c:v", "copy", "-c:a", "copy",
-        "-f", "flv", "-g", "60", "-t", "00:00:30",
+        "-f", "flv", "-g", "60", "-t", video_duration,
         "-flvflags", "no_duration_filesize", f"{URL}/{KEY}"
     ]
 
-    ffmpeg_task = DockerOperator(
-        task_id='ffmpeg_task',
+    ffmpeg_stream_task = DockerOperator(
+        task_id='stream_task',
         image='jrottenberg/ffmpeg:4.1-ubuntu',
         api_version='auto',
         auto_remove=True,
@@ -117,9 +117,8 @@ with models.DAG(
          }
         ]
     )
-"""
+
 
     #cleanup_files_task >> 
-    #create_playlist_task
-    #>> ffmpeg_task
+    create_playlist_task >> ffmpeg_stream_task
     #ffmpeg_stream_task >> cleanup_files_task
