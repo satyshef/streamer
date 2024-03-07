@@ -37,6 +37,7 @@ target_datetime = today.strftime("%Y-%m-%d %H:%M:%S")
 @task.python
 def create_video_playlist(video_dir, playlist_path):
     file_list = []
+    result = []
     # проверяем сумарную длительность видео
     for file in os.listdir(video_dir):
         file_list.append(file)
@@ -49,9 +50,10 @@ def create_video_playlist(video_dir, playlist_path):
         for file in file_list:
             if file.endswith(".mp4"):  # adjust file extension as needed
                 playlist_file.write(f"file '{video_dir}/{file}'\n")
+                result.append(f"{video_dir}/{file}")
         #playlist_file.write("file 'videolist.txt'\n")
                 
-    return file_list
+    return result
 
 
 # переделать так что бы загружадась реальная длитильность клипа
