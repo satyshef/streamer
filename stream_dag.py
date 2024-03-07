@@ -85,11 +85,12 @@ with models.DAG(
         dag=dag,
     )
 
+    video_duration = 60
     ffmpeg_command = [
         "-re", "-f", "concat", "-safe", "0", "-i", VIDEO_PATH,
-        "-re", "-f", "concat", "-i", AUDIO_PATH,
+        "-f", "concat", "-i", AUDIO_PATH,
         "-c:v", "copy", "-c:a", "copy",
-        "-f", "flv", "-g", "60", "-t", "00:00:60",
+        "-f", "flv", "-g", "60", "-t", video_duration,
         "-flvflags", "no_duration_filesize", f"{URL}/{KEY}"
     ]
 
