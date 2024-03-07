@@ -89,7 +89,7 @@ with models.DAG(
         "-re", "-f", "concat", "-safe", "0", "-i", VIDEO_PATH,
         "-re", "-f", "concat", "-i", AUDIO_PATH,
         "-c:v", "copy", "-c:a", "copy",
-        "-f", "flv", "-g", "60", "-t", video_duration,
+        "-f", "flv", "-g", "60", "-t", f"{video_duration}",
         "-flvflags", "no_duration_filesize", f"{URL}/{KEY}"
     ]
 
@@ -120,5 +120,5 @@ with models.DAG(
 
 
     #cleanup_files_task >> 
-    create_playlist_task >> ffmpeg_stream_task
-    #ffmpeg_stream_task >> cleanup_files_task
+    create_playlist_task >> ffmpeg_stream_task >> cleanup_files_task
+    #ffmpeg_stream_task
