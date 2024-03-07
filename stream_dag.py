@@ -6,33 +6,50 @@ from airflow.operators.docker_operator import DockerOperator
 from datetime import datetime, timedelta
 import os
 
-os.chdir("./data")
 
 # Ключевые настройки
+DATA_DIR = './data'
+INTERVAL = 120 # min
+MIN_VIDEO_DURATION = 30 # какая минимальная длительность видео для стрима
+
+
 VIDEO_SOURCE_PATH = "video/test"
 #FILE_NAME = "stream_list/videolist_disposable.txt"
 VIDEO_PATH = "stream_list/videolist_disposable.txt"
 AUDIO_PATH = "stream_list/audiolist_dynamic.txt"
-INTERVAL = timedelta(minutes=220)
+
 DAG_ID = "stream_dag"
 KEY = "live_487176421_EcsFu6ZRH7WfHD5L72cobItWDTQjcQ"
 URL = "rtmp://live.twitch.tv/app"
 
+
+
+current_video_duration = 0
+os.chdir(DATA_DIR)
 # Устанавливаем target_datetime в начало текущего дня
 today = datetime.now()
 #.replace(hour=0, minute=0, second=0, microsecond=0)
 target_datetime = today.strftime("%Y-%m-%d %H:%M:%S")
 
 def create_video_playlist():
-    return
+    clip_duration = 9
+    for file in os.listdir(VIDEO_SOURCE_PATH):
+        current_video_duration += clip_duration
+
+    if current_video_duration < MIN_VIDEO_DURATION:
+        print("small video")
+
     with open(VIDEO_PATH, 'w') as playlist_file:
+            playlist_file.write("DURATION:", current_video_duration)
+    return
+"""
         playlist_file.write('ffconcat version 1.0\n')
         playlist_file.write('file \'intro.mp4\'\n')
         for file in os.listdir(VIDEO_SOURCE_PATH):
             if file.endswith(".mp4"):  # adjust file extension as needed
                 playlist_file.write(f"file '{VIDEO_SOURCE_PATH}/{file}'\n")
         #playlist_file.write("file 'videolist.txt'\n")
-
+"""
 
 # Определение функции для выполнения действий, аналогичных Bash-скрипту
 def run_ffmpeg_stream():
@@ -47,7 +64,7 @@ def cleanup_old_files():
 
 with models.DAG(
     DAG_ID,
-    schedule=INTERVAL,
+    schedule=timedelta(minutes=INTERVAL),
     start_date=datetime(2023, 1, 1),
     catchup=False,
     tags=["polihoster", "streamer", "test"],
