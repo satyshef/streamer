@@ -22,8 +22,8 @@ DAG_ID = "stream_dag"
 KEY="jww0-gred-8vfj-tduk-fa13"
 URL="rtmp://a.rtmp.youtube.com/live2"
 # twitch
-KEY = "live_487176421_EcsFu6ZRH7WfHD5L72cobItWDTQjcQ"
-URL = "rtmp://live.twitch.tv/app"
+#KEY = "live_487176421_EcsFu6ZRH7WfHD5L72cobItWDTQjcQ"
+#URL = "rtmp://live.twitch.tv/app"
 
 
 
@@ -39,8 +39,8 @@ def create_video_playlist(video_dir, playlist_path):
     file_list = []
     # проверяем сумарную длительность видео
     for file in os.listdir(video_dir):
-        file_list.append(f"{video_dir}/{file}")
- 
+        file_list.append(os.path.join(video_dir, file))
+    
     # записываем в плейлист
     with open(playlist_path, 'w') as playlist_file:
         playlist_file.write('ffconcat version 1.0\n')
@@ -119,7 +119,7 @@ with models.DAG(
 
     #create_playlist_task >> video_duration_task
     #video_duration_task >> ffmpeg_task
-    ffmpeg_task >> delete_files_task
+    #ffmpeg_task >> delete_files_task
 
     #cleanup_files_task >> 
     #create_playlist_task >> ffmpeg_stream_task >> cleanup_files_task
