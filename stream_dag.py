@@ -6,6 +6,7 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.docker_operator import DockerOperator
 from datetime import datetime, timedelta
 import os
+import subprocess
 
 
 # Ключевые настройки
@@ -56,10 +57,32 @@ def create_video_playlist():
         #playlist_file.write("file 'videolist.txt'\n")
 
 
-# Определение функции для выполнения действий, аналогичных Bash-скрипту
 def run_ffmpeg_stream():
-    print('run stream')
-    # Формируем команду ffmpeg
+    ffmpeg_command = [
+        "-re", "-f", "concat", "-safe", "0", "-i", VIDEO_PATH,
+        "-f", "concat", "-i", AUDIO_PATH,
+        "-c:v", "copy", "-c:a", "copy",
+        "-f", "flv", "-g", "60", "-t", str(video_duration),
+        "-flvflags", "no_duration_filesize", f"{URL}/{KEY}"
+    ]
+    
+    docker_task = DockerOperator(
+        task_id='ffmpeg_docker_task',
+        image='jrottenberg/ffmpeg:4.1-ubuntu',
+        api_version='auto',
+        auto_remove=True,
+        command=ffmpeg_command,
+        docker_url="unix://var/run/docker.sock",
+        mount_tmp_dir=False,
+        working_dir='/root/data',
+        mounts=[{
+            'source': '/root/data',
+            'target': '/root/data',
+            "type": "bind"
+        }],
+    )
+    
+    return docker_task.execute(context=None)
     
 def cleanup_old_files():
     return
@@ -88,36 +111,11 @@ with models.DAG(
 
     #ffmpeg_command = 
 
-    
-
-    ffmpeg_stream_task = DockerOperator(
-        task_id='stream_task',
-        image='jrottenberg/ffmpeg:4.1-ubuntu',
-        api_version='auto',
-        auto_remove=True,
-        command=[
-            "-re", "-f", "concat", "-safe", "0", "-i", VIDEO_PATH,
-            "-f", "concat", "-i", AUDIO_PATH,
-            "-c:v", "copy", "-c:a", "copy",
-            "-f", "flv", "-g", "60", "-t", str(video_duration),
-            "-flvflags", "no_duration_filesize", f"{URL}/{KEY}"
-        ],
-        #[f"ffmpeg -re -f concat -safe 0 -i {VIDEO_PATH} -c:v copy -c:a copy -f flv -g 60 -flvflags no_duration_filesize {URL}/{KEY}"],
-        #entrypoint = "/bin/bash -c",
-        #command = ["touch stream_list/sasa1213"],
-        docker_url="unix://var/run/docker.sock",
-        #network_mode="bridge",
-        mount_tmp_dir=False,
-        working_dir = '/root/data',
-        mounts=[
-         {
-           'source': '/root/data',
-           'target': '/root/data',
-           "type": "bind"
-         }
-        ]
+    ffmpeg_stream_task = PythonOperator(
+        task_id='ffmpeg_stream_task',
+        python_callable=run_ffmpeg_stream,
+        dag=dag,
     )
-
 
     #cleanup_files_task >> 
     create_playlist_task >> ffmpeg_stream_task >> cleanup_files_task
