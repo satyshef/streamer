@@ -34,6 +34,7 @@ target_datetime = today.strftime("%Y-%m-%d %H:%M:%S")
 
 def create_video_playlist():
     global video_duration
+    video_duration = 0
     clip_duration = 9
     file_list = []
     # проверяем сумарную длительность видео
