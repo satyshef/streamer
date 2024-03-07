@@ -1,0 +1,101 @@
+from airflow import DAG
+from airflow import models
+from airflow.decorators import task
+from airflow.operators.python_operator import PythonOperator
+from airflow.operators.docker_operator import DockerOperator
+from datetime import datetime, timedelta
+import os
+
+os.chdir("./data")
+
+# Ключевые настройки
+VIDEO_SOURCE_PATH = "video/test"
+#FILE_NAME = "stream_list/videolist_disposable.txt"
+VIDEO_PATH = "stream_list/videolist_disposable.txt"
+AUDIO_PATH = "stream_list/audiolist_dynamic.txt"
+INTERVAL = timedelta(minutes=220)
+DAG_ID = "test_streamer"
+KEY = "live_487176421_EcsFu6ZRH7WfHD5L72cobItWDTQjcQ"
+URL = "rtmp://live.twitch.tv/app"
+
+# Устанавливаем target_datetime в начало текущего дня
+today = datetime.now()
+#.replace(hour=0, minute=0, second=0, microsecond=0)
+target_datetime = today.strftime("%Y-%m-%d %H:%M:%S")
+
+def create_video_playlist():
+    with open(VIDEO_PATH, 'w') as playlist_file:
+        playlist_file.write('ffconcat version 1.0\n')
+        playlist_file.write('file \'intro.mp4\'\n')
+        for file in os.listdir(VIDEO_SOURCE_PATH):
+            if file.endswith(".mp4"):  # adjust file extension as needed
+                playlist_file.write(f"file '{VIDEO_SOURCE_PATH}/{file}'\n")
+        #playlist_file.write("file 'videolist.txt'\n")
+
+
+# Определение функции для выполнения действий, аналогичных Bash-скрипту
+def run_ffmpeg_stream():
+    print('run stream')
+    # Формируем команду ffmpeg
+    
+def cleanup_old_files():
+    return
+    os.system(f"find '{VIDEO_SOURCE_PATH}' -type f ! -newermt '{target_datetime}' -exec rm {{}} \;")
+    print("Old files deleted.")
+
+
+with models.DAG(
+    DAG_ID,
+    schedule=INTERVAL,
+    start_date=datetime(2023, 1, 1),
+    catchup=False,
+    tags=["polihoster", "streamer", "test"],
+) as dag:
+    create_playlist_task = PythonOperator(
+        task_id='create_video_playlist',
+        python_callable=create_video_playlist,
+        dag=dag,
+    )
+
+    cleanup_files_task = PythonOperator(
+        task_id='cleanup_old_files',
+        python_callable=cleanup_old_files,
+        dag=dag,
+    )
+
+    ffmpeg_command = [
+        "-re", "-f", "concat", "-safe", "0", "-i", VIDEO_PATH,
+        "-re", "-f", "concat", "-i", AUDIO_PATH,
+        "-c:v", "copy", "-c:a", "copy",
+        "-f", "flv", "-g", "60", "-t", "00:00:30",
+        "-flvflags", "no_duration_filesize", f"{URL}/{KEY}"
+    ]
+
+    ffmpeg_task = DockerOperator(
+        task_id='ffmpeg_task',
+        image='jrottenberg/ffmpeg:4.1-ubuntu',
+        api_version='auto',
+        auto_remove=True,
+        command=ffmpeg_command,
+        #[f"ffmpeg -re -f concat -safe 0 -i {VIDEO_PATH} -c:v copy -c:a copy -f flv -g 60 -flvflags no_duration_filesize {URL}/{KEY}"],
+        #entrypoint = "/bin/bash -c",
+        #command = ["touch stream_list/sasa1213"],
+        docker_url="unix://var/run/docker.sock",
+        #network_mode="bridge",
+        mount_tmp_dir=True,
+        working_dir = '/root/data',
+        mounts=[
+         {
+           'source': '/root/data',
+           'target': '/root/data',
+           "type": "bind",
+           "consistency": "cached",
+           "propagation": "rshared",
+           "read_only": False,
+         }
+        ]
+    )
+
+    #cleanup_files_task >> 
+    create_playlist_task >> ffmpeg_task
+    #ffmpeg_stream_task >> cleanup_files_task
