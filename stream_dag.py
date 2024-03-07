@@ -115,11 +115,11 @@ with models.DAG(
     create_playlist_task = create_video_playlist(VIDEO_SOURCE_PATH, VIDEO_PLAYLIST)
     video_duration_task = calc_video_duration(create_playlist_task)
     ffmpeg_task = run_ffmpeg_stream(VIDEO_PLAYLIST, AUDIO_PLAYLIST, video_duration_task)
-    delete_files_task = delete_used_files(create_playlist_task)
+    #delete_files_task = delete_used_files(create_playlist_task)
 
     create_playlist_task >> video_duration_task
     video_duration_task >> ffmpeg_task
-    ffmpeg_task >> delete_files_task
+    #ffmpeg_task >> delete_files_task
 
     #cleanup_files_task >> 
     #create_playlist_task >> ffmpeg_stream_task >> cleanup_files_task
