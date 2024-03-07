@@ -22,8 +22,8 @@ DAG_ID = "stream_dag"
 KEY="jww0-gred-8vfj-tduk-fa13"
 URL="rtmp://a.rtmp.youtube.com/live2"
 # twitch
-#KEY = "live_487176421_EcsFu6ZRH7WfHD5L72cobItWDTQjcQ"
-#URL = "rtmp://live.twitch.tv/app"
+KEY = "live_487176421_EcsFu6ZRH7WfHD5L72cobItWDTQjcQ"
+URL = "rtmp://live.twitch.tv/app"
 
 
 
