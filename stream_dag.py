@@ -34,7 +34,7 @@ target_datetime = today.strftime("%Y-%m-%d %H:%M:%S")
 
 def create_video_playlist():
     global video_duration
-    video_duration = 0
+    #video_duration = 0
     clip_duration = 9
     file_list = []
     # проверяем сумарную длительность видео
@@ -86,23 +86,22 @@ with models.DAG(
         dag=dag,
     )
 
-    ffmpeg_command = [
-        "-re", "-f", "concat", "-safe", "0", "-i", VIDEO_PATH,
-        "-f", "concat", "-i", AUDIO_PATH,
-        "-c:v", "copy", "-c:a", "copy",
-        "-f", "flv", "-g", "60", "-t", str(video_duration),
-        "-flvflags", "no_duration_filesize", f"{URL}/{KEY}"
-    ]
+    #ffmpeg_command = 
 
-    with open("ffmpeg_command.txt", "w") as file:
-        file.write(" ".join(ffmpeg_command))
+    
 
     ffmpeg_stream_task = DockerOperator(
         task_id='stream_task',
         image='jrottenberg/ffmpeg:4.1-ubuntu',
         api_version='auto',
         auto_remove=True,
-        command=ffmpeg_command,
+        command=[
+            "-re", "-f", "concat", "-safe", "0", "-i", VIDEO_PATH,
+            "-f", "concat", "-i", AUDIO_PATH,
+            "-c:v", "copy", "-c:a", "copy",
+            "-f", "flv", "-g", "60", "-t", str(video_duration),
+            "-flvflags", "no_duration_filesize", f"{URL}/{KEY}"
+        ],
         #[f"ffmpeg -re -f concat -safe 0 -i {VIDEO_PATH} -c:v copy -c:a copy -f flv -g 60 -flvflags no_duration_filesize {URL}/{KEY}"],
         #entrypoint = "/bin/bash -c",
         #command = ["touch stream_list/sasa1213"],
