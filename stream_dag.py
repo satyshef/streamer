@@ -89,7 +89,7 @@ with models.DAG(
         "-re", "-f", "concat", "-safe", "0", "-i", VIDEO_PATH,
         "-re", "-f", "concat", "-i", AUDIO_PATH,
         "-c:v", "copy", "-c:a", "copy",
-        "-f", "flv", "-g", "60", "-t", f"{video_duration}",
+        "-f", "flv", "-g", "60", "-t", "00:00:60",
         "-flvflags", "no_duration_filesize", f"{URL}/{KEY}"
     ]
 
@@ -104,16 +104,13 @@ with models.DAG(
         #command = ["touch stream_list/sasa1213"],
         docker_url="unix://var/run/docker.sock",
         #network_mode="bridge",
-        mount_tmp_dir=True,
+        mount_tmp_dir=False,
         working_dir = '/root/data',
         mounts=[
          {
            'source': '/root/data',
            'target': '/root/data',
-           "type": "bind",
-           "consistency": "cached",
-           "propagation": "rshared",
-           "read_only": False,
+           "type": "bind"
          }
         ]
     )
