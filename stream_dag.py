@@ -26,16 +26,17 @@ URL = "rtmp://live.twitch.tv/app"
 
 
 
-video_duration = 0
+#video_duration = 0
 os.chdir(DATA_DIR)
 # Устанавливаем target_datetime в начало текущего дня
 today = datetime.now()
 #.replace(hour=0, minute=0, second=0, microsecond=0)
 target_datetime = today.strftime("%Y-%m-%d %H:%M:%S")
 
+@task.python
 def create_video_playlist():
-    global video_duration
-    #video_duration = 0
+    #global video_duration
+    video_duration = 0
     clip_duration = 9
     file_list = []
     # проверяем сумарную длительность видео
@@ -55,9 +56,11 @@ def create_video_playlist():
             if file.endswith(".mp4"):  # adjust file extension as needed
                 playlist_file.write(f"file '{VIDEO_SOURCE_PATH}/{file}'\n")
         #playlist_file.write("file 'videolist.txt'\n")
+                
+    return video_duration
 
-
-def run_ffmpeg_stream():
+@task.python
+def run_ffmpeg_stream(video_duration):
     ffmpeg_command = [
         "-re", "-f", "concat", "-safe", "0", "-i", VIDEO_PATH,
         "-f", "concat", "-i", AUDIO_PATH,
@@ -84,6 +87,7 @@ def run_ffmpeg_stream():
     
     return docker_task.execute(context=None)
     
+@task.python
 def cleanup_old_files():
     return
     os.system(f"find '{VIDEO_SOURCE_PATH}' -type f ! -newermt '{target_datetime}' -exec rm {{}} \;")
@@ -97,6 +101,8 @@ with models.DAG(
     catchup=False,
     tags=["polihoster", "streamer", "test"],
 ) as dag:
+    
+    """
     create_playlist_task = PythonOperator(
         task_id='create_video_playlist',
         python_callable=create_video_playlist,
@@ -117,6 +123,9 @@ with models.DAG(
         dag=dag,
     )
 
+    """
+    video_duration = create_video_playlist()
+    run_ffmpeg_stream(video_duration)
     #cleanup_files_task >> 
-    create_playlist_task >> ffmpeg_stream_task >> cleanup_files_task
+    #create_playlist_task >> ffmpeg_stream_task >> cleanup_files_task
     #ffmpeg_stream_task
