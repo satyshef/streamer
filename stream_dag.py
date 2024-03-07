@@ -6,23 +6,24 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.operators.docker_operator import DockerOperator
 from datetime import datetime, timedelta
 import os
-import subprocess
-
 
 # Ключевые настройки
 DATA_DIR = './data'
-INTERVAL = 120 # min
-MIN_VIDEO_DURATION = 30 # какая минимальная длительность видео для стрима
+INTERVAL = 60 # min
+MIN_VIDEO_DURATION = 90 # какая минимальная длительность видео для стрима в секундах
 
 
 VIDEO_SOURCE_PATH = "video/test"
-#FILE_NAME = "stream_list/videolist_disposable.txt"
 VIDEO_PLAYLIST = "stream_list/videolist_disposable.txt"
 AUDIO_PLAYLIST = "stream_list/audiolist_dynamic.txt"
 
 DAG_ID = "stream_dag"
-KEY = "live_487176421_EcsFu6ZRH7WfHD5L72cobItWDTQjcQ"
-URL = "rtmp://live.twitch.tv/app"
+#youtube
+KEY="jww0-gred-8vfj-tduk-fa13"
+URL="rtmp://a.rtmp.youtube.com/live2"
+# twitch
+#KEY = "live_487176421_EcsFu6ZRH7WfHD5L72cobItWDTQjcQ"
+#URL = "rtmp://live.twitch.tv/app"
 
 
 
@@ -95,7 +96,9 @@ def run_ffmpeg_stream(video_playlist, audio_playlist, video_duration):
     return docker_task.execute(context=None)
     
 @task.python
-def cleanup_old_files():
+def delete_used_files(file_list):
+    for file in file_list:
+        os.remove(file)
     return
     os.system(f"find '{VIDEO_SOURCE_PATH}' -type f ! -newermt '{target_datetime}' -exec rm {{}} \;")
     print("Old files deleted.")
@@ -109,31 +112,12 @@ with models.DAG(
     tags=["polihoster", "streamer", "test"],
 ) as dag:
     
-    """
-    create_playlist_task = PythonOperator(
-        task_id='create_video_playlist',
-        python_callable=create_video_playlist,
-        dag=dag,
-    )
-
-    cleanup_files_task = PythonOperator(
-        task_id='cleanup_old_files',
-        python_callable=cleanup_old_files,
-        dag=dag,
-    )
-
-    #ffmpeg_command = 
-
-    ffmpeg_stream_task = PythonOperator(
-        task_id='ffmpeg_stream_task',
-        python_callable=run_ffmpeg_stream,
-        dag=dag,
-    )
-
-    """
     file_list = create_video_playlist(VIDEO_SOURCE_PATH, VIDEO_PLAYLIST)
     video_duration = calc_video_duration(file_list)
     run_ffmpeg_stream(VIDEO_PLAYLIST, AUDIO_PLAYLIST, video_duration)
+    delete_used_files(file_list)
+
+    create_video_playlist >> calc_video_duration >> run_ffmpeg_stream >> delete_used_files
     #cleanup_files_task >> 
     #create_playlist_task >> ffmpeg_stream_task >> cleanup_files_task
     #ffmpeg_stream_task
