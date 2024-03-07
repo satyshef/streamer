@@ -1,3 +1,0 @@
-ffconcat version 1.0
-file 'test.mp4'
-file 'videolist.txt'

@@ -1,2 +1,0 @@
-ffconcat version 1.0
-file '/root/config/streamer/videolist.txt'
