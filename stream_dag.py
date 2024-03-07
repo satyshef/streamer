@@ -17,8 +17,8 @@ MIN_VIDEO_DURATION = 30 # какая минимальная длительнос
 
 VIDEO_SOURCE_PATH = "video/test"
 #FILE_NAME = "stream_list/videolist_disposable.txt"
-VIDEO_PATH = "stream_list/videolist_disposable.txt"
-AUDIO_PATH = "stream_list/audiolist_dynamic.txt"
+VIDEO_PLAYLIST = "stream_list/videolist_disposable.txt"
+AUDIO_PLAYLIST = "stream_list/audiolist_dynamic.txt"
 
 DAG_ID = "stream_dag"
 KEY = "live_487176421_EcsFu6ZRH7WfHD5L72cobItWDTQjcQ"
@@ -34,36 +34,43 @@ today = datetime.now()
 target_datetime = today.strftime("%Y-%m-%d %H:%M:%S")
 
 @task.python
-def create_video_playlist():
-    #global video_duration
-    video_duration = 0
-    clip_duration = 9
+def create_video_playlist(video_dir, playlist_path):
     file_list = []
     # проверяем сумарную длительность видео
-    for file in os.listdir(VIDEO_SOURCE_PATH):
-        video_duration += clip_duration
+    for file in os.listdir(video_dir):
         file_list.append(file)
+ 
+    # записываем в плейлист
+    with open(playlist_path, 'w') as playlist_file:
+        playlist_file.write('ffconcat version 1.0\n')
+        playlist_file.write('file \'intro.mp4\'\n')
+        for file in file_list:
+            if file.endswith(".mp4"):  # adjust file extension as needed
+                playlist_file.write(f"file '{video_dir}/{file}'\n")
+        #playlist_file.write("file 'videolist.txt'\n")
+                
+    return file_list
+
+
+# переделать так что бы загружадась реальная длитильность клипа
+@task.python
+def calc_video_duration(file_list):
+    clip_duration = 9
+    video_duration = clip_duration * len(file_list)
+    #for file in file_list:
+    #  video_duration += clip_duration
 
     if video_duration < MIN_VIDEO_DURATION:
         print("Small video")
         raise AirflowSkipException
     
-    # записываем в плейлист
-    with open(VIDEO_PATH, 'w') as playlist_file:
-        playlist_file.write('ffconcat version 1.0\n')
-        playlist_file.write('file \'intro.mp4\'\n')
-        for file in file_list:
-            if file.endswith(".mp4"):  # adjust file extension as needed
-                playlist_file.write(f"file '{VIDEO_SOURCE_PATH}/{file}'\n")
-        #playlist_file.write("file 'videolist.txt'\n")
-                
     return video_duration
 
 @task.python
-def run_ffmpeg_stream(video_duration):
+def run_ffmpeg_stream(video_playlist, audio_playlist, video_duration):
     ffmpeg_command = [
-        "-re", "-f", "concat", "-safe", "0", "-i", VIDEO_PATH,
-        "-f", "concat", "-i", AUDIO_PATH,
+        "-re", "-f", "concat", "-safe", "0", "-i", video_playlist,
+        "-f", "concat", "-i", audio_playlist,
         "-c:v", "copy", "-c:a", "copy",
         "-f", "flv", "-g", "60", "-t", str(video_duration),
         "-flvflags", "no_duration_filesize", f"{URL}/{KEY}"
@@ -124,8 +131,9 @@ with models.DAG(
     )
 
     """
-    video_duration = create_video_playlist()
-    run_ffmpeg_stream(video_duration)
+    file_list = create_video_playlist(VIDEO_SOURCE_PATH, VIDEO_PLAYLIST)
+    video_duration = calc_video_duration(file_list)
+    run_ffmpeg_stream(VIDEO_PLAYLIST, AUDIO_PLAYLIST, video_duration)
     #cleanup_files_task >> 
     #create_playlist_task >> ffmpeg_stream_task >> cleanup_files_task
     #ffmpeg_stream_task
