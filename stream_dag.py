@@ -1,6 +1,7 @@
 from airflow import DAG
 from airflow import models
 from airflow.decorators import task
+from airflow.exceptions import AirflowSkipException
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.docker_operator import DockerOperator
 from datetime import datetime, timedelta
@@ -34,23 +35,25 @@ target_datetime = today.strftime("%Y-%m-%d %H:%M:%S")
 def create_video_playlist():
     global current_video_duration
     clip_duration = 9
+    file_list = []
+    # проверяем сумарную длительность видео
     for file in os.listdir(VIDEO_SOURCE_PATH):
         current_video_duration += clip_duration
+        file_list.append(file)
 
     if current_video_duration < MIN_VIDEO_DURATION:
-        print("small video")
-
+        print("Small video")
+        raise AirflowSkipException
+    
+    # записываем в плейлист
     with open(VIDEO_PATH, 'w') as playlist_file:
-            playlist_file.write(f"DURATION:{current_video_duration}")
-    return
-"""
         playlist_file.write('ffconcat version 1.0\n')
         playlist_file.write('file \'intro.mp4\'\n')
-        for file in os.listdir(VIDEO_SOURCE_PATH):
+        for file in file_list:
             if file.endswith(".mp4"):  # adjust file extension as needed
                 playlist_file.write(f"file '{VIDEO_SOURCE_PATH}/{file}'\n")
         #playlist_file.write("file 'videolist.txt'\n")
-"""
+
 
 # Определение функции для выполнения действий, аналогичных Bash-скрипту
 def run_ffmpeg_stream():
