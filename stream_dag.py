@@ -94,6 +94,9 @@ with models.DAG(
         "-flvflags", "no_duration_filesize", f"{URL}/{KEY}"
     ]
 
+    with open("ffmpeg_command.txt", "w") as file:
+        file.write(" ".join(ffmpeg_command))
+
     ffmpeg_stream_task = DockerOperator(
         task_id='stream_task',
         image='jrottenberg/ffmpeg:4.1-ubuntu',
