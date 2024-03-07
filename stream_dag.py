@@ -14,7 +14,7 @@ VIDEO_SOURCE_PATH = "video/test"
 VIDEO_PATH = "stream_list/videolist_disposable.txt"
 AUDIO_PATH = "stream_list/audiolist_dynamic.txt"
 INTERVAL = timedelta(minutes=220)
-DAG_ID = "test_streamer"
+DAG_ID = "stream_dag"
 KEY = "live_487176421_EcsFu6ZRH7WfHD5L72cobItWDTQjcQ"
 URL = "rtmp://live.twitch.tv/app"
 
@@ -24,6 +24,7 @@ today = datetime.now()
 target_datetime = today.strftime("%Y-%m-%d %H:%M:%S")
 
 def create_video_playlist():
+    return
     with open(VIDEO_PATH, 'w') as playlist_file:
         playlist_file.write('ffconcat version 1.0\n')
         playlist_file.write('file \'intro.mp4\'\n')
@@ -62,7 +63,7 @@ with models.DAG(
         python_callable=cleanup_old_files,
         dag=dag,
     )
-
+"""
     ffmpeg_command = [
         "-re", "-f", "concat", "-safe", "0", "-i", VIDEO_PATH,
         "-re", "-f", "concat", "-i", AUDIO_PATH,
@@ -95,7 +96,9 @@ with models.DAG(
          }
         ]
     )
+"""
 
     #cleanup_files_task >> 
-    create_playlist_task >> ffmpeg_task
+    #create_playlist_task
+    #>> ffmpeg_task
     #ffmpeg_stream_task >> cleanup_files_task
