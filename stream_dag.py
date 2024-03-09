@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import os
 
-import libs.youtube.stream as youtube
+import streamer.lib.youtube.stream as youtube
 
 from airflow import DAG
 from airflow import models
