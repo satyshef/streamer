@@ -1,11 +1,15 @@
+from datetime import datetime, timedelta
+import os
+
+import libs.youtube.stream as youtube
+
 from airflow import DAG
 from airflow import models
 from airflow.decorators import task
 from airflow.exceptions import AirflowSkipException
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.docker_operator import DockerOperator
-from datetime import datetime, timedelta
-import os
+
 
 # Ключевые настройки
 DATA_DIR = './data'
@@ -17,10 +21,14 @@ VIDEO_SOURCE_PATH = "video/masa_live_1920_1080"
 VIDEO_PLAYLIST = "stream_list/videolist_disposable.txt"
 AUDIO_PLAYLIST = "stream_list/audiolist_dynamic.txt"
 
-DAG_ID = "stream_dag"
+STREAM_TITLE = "СВОДКА НОВОСТЕЙ"
+STREAM_DESCRIPTION = "Самые актуальные новости на данный момент"
+STREAM_THUMBNAIL_FILE = "youtube_streamer/masa_stream.png"
+
+DAG_ID = "youtube_stream_dag"
 #youtube
-KEY="jww0-gred-8vfj-tduk-fa13"
-URL="rtmp://a.rtmp.youtube.com/live2"
+#KEY="jww0-gred-8vfj-tduk-fa13"
+#URL="rtmp://a.rtmp.youtube.com/live2"
 # twitch
 #KEY = "live_487176421_EcsFu6ZRH7WfHD5L72cobItWDTQjcQ"
 #URL = "rtmp://live.twitch.tv/app"
@@ -71,13 +79,21 @@ def calc_video_duration(file_list):
     return video_duration
 
 @task.python
-def run_ffmpeg_stream(video_playlist, audio_playlist, video_duration):
+def create_stream():
+    ingestion = youtube.create_stream(STREAM_TITLE, STREAM_DESCRIPTION, STREAM_THUMBNAIL_FILE)
+    if ingestion == None:
+        print("Stream not created")
+        raise AirflowSkipException
+    return ingestion
+
+@task.python
+def run_ffmpeg_stream(rtmps_addr, video_playlist, audio_playlist, video_duration):
     ffmpeg_command = [
         "-re", "-f", "concat", "-safe", "0", "-i", video_playlist,
         "-f", "concat", "-i", audio_playlist,
         "-c:v", "copy", "-c:a", "copy",
         "-f", "flv", "-g", "60", "-t", str(video_duration),
-        "-flvflags", "no_duration_filesize", f"{URL}/{KEY}"
+        "-flvflags", "no_duration_filesize", rtmps_addr
     ]
     
     docker_task = DockerOperator(
@@ -100,12 +116,10 @@ def run_ffmpeg_stream(video_playlist, audio_playlist, video_duration):
     
 @task.python
 def delete_used_files(file_list):
+    return
     for file in file_list:
         os.remove(file)
-    return
-    os.system(f"find '{VIDEO_SOURCE_PATH}' -type f ! -newermt '{target_datetime}' -exec rm {{}} \;")
-    print("Old files deleted.")
-
+    
 
 with models.DAG(
     DAG_ID,
@@ -117,11 +131,13 @@ with models.DAG(
     
     create_playlist_task = create_video_playlist(VIDEO_SOURCE_PATH, VIDEO_PLAYLIST)
     video_duration_task = calc_video_duration(create_playlist_task)
-    ffmpeg_task = run_ffmpeg_stream(VIDEO_PLAYLIST, AUDIO_PLAYLIST, video_duration_task)
+    rtmps_addr_task = create_stream()
+    ffmpeg_task = run_ffmpeg_stream(rtmps_addr_task, VIDEO_PLAYLIST, AUDIO_PLAYLIST, video_duration_task)
     delete_files_task = delete_used_files(create_playlist_task)
 
     create_playlist_task >> video_duration_task
-    video_duration_task >> ffmpeg_task
+    video_duration_task >> rtmps_addr_task
+    rtmps_addr_task >> ffmpeg_task
     ffmpeg_task >> delete_files_task
 
     #cleanup_files_task >> 
