@@ -116,7 +116,6 @@ def run_ffmpeg_stream(rtmps_addr, video_playlist, audio_playlist, video_duration
     
 @task.python
 def delete_used_files(file_list):
-    return
     for file in file_list:
         os.remove(file)
     
