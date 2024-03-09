@@ -80,7 +80,7 @@ def calc_video_duration(file_list):
 
 @task.python
 def create_stream():
-    ingestion = youtube.create_stream(STREAM_TITLE, STREAM_DESCRIPTION, STREAM_THUMBNAIL_FILE)
+    ingestion = youtube.create_stream(STREAM_TITLE, STREAM_DESCRIPTION, STREAM_THUMBNAIL_FILE, 'public')
     if ingestion == None:
         print("Stream not created")
         raise AirflowSkipException
