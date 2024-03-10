@@ -17,7 +17,7 @@ from airflow.operators.docker_operator import DockerOperator
 DATA_DIR = './data'
 INTERVAL = 60 # min
 MIN_VIDEO_DURATION = 90 # какая минимальная длительность видео для стрима в секундах
-
+CLIP_DURATION = 9
 
 VIDEO_SOURCE_PATH = "video/masa_live_1920_1080"
 VIDEO_PLAYLIST = "stream_list/videolist_disposable.txt"
@@ -76,7 +76,7 @@ def create_video_playlist(video_dir, playlist_path):
 # переделать так что бы загружадась реальная длитильность клипа
 @task.python
 def calc_video_duration(file_list):
-    clip_duration = 9
+    clip_duration = CLIP_DURATION
     video_duration = clip_duration * len(file_list)
     #for file in file_list:
     #  video_duration += clip_duration

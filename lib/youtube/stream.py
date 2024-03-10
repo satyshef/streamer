@@ -139,7 +139,6 @@ def create_stream(title, description, thumbnail, privacyStatus="private"):
     insert_broadcast_response = insert_broadcast(service, title, description, privacyStatus)
     broadcast_id = insert_broadcast_response["id"]
     set_broadcast_thumbnail(service, broadcast_id, thumbnail)
-    return
     insert_stream_response = insert_stream(service, title, description)
     stream_id = insert_stream_response["id"]
     bind_broadcast_and_stream(service, broadcast_id, stream_id)
