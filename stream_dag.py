@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 import os
 
 import streamer.lib.youtube.stream as youtube
+import streamer.lib.helper as helper
+import streamer.lib.image.modifier as image
 
 from airflow import DAG
 from airflow import models
@@ -17,13 +19,20 @@ INTERVAL = 60 # min
 MIN_VIDEO_DURATION = 90 # какая минимальная длительность видео для стрима в секундах
 
 
-VIDEO_SOURCE_PATH = "video/masa_live_1920_1080"
+VIDEO_SOURCE_PATH = "video/test"
 VIDEO_PLAYLIST = "stream_list/videolist_disposable.txt"
 AUDIO_PLAYLIST = "stream_list/audiolist_dynamic.txt"
 
 STREAM_TITLE = "СВОДКА НОВОСТЕЙ"
 STREAM_DESCRIPTION = "Самые актуальные новости на данный момент"
 STREAM_THUMBNAIL_FILE = "youtube_streamer/masa_stream.png"
+
+# настройки обложки
+IMAGE_FONT = 'youtube_streamer/fonts/Geist-UltraBlack.otf'
+IMAGE_FONT_SIZE = 80
+IMAGE_INPUT_PATH = 'youtube_streamer/images/masa_stream.png'
+IMAGE_RESULT_DIR = 'images/'
+TIMEZONE = 3
 
 DAG_ID = "youtube_stream_dag"
 #youtube
@@ -79,8 +88,17 @@ def calc_video_duration(file_list):
     return video_duration
 
 @task.python
-def create_stream():
-    ingestion = youtube.create_stream(STREAM_TITLE, STREAM_DESCRIPTION, STREAM_THUMBNAIL_FILE, 'public')
+def create_thumbnail():
+    image_out_path = IMAGE_RESULT_DIR + helper.generate_filename(IMAGE_INPUT_PATH)
+    # Пример использования функции
+    text = helper.get_news_time(format=None, round=False, timezone=TIMEZONE)
+    if image.place_text_center(IMAGE_INPUT_PATH, image_out_path, text, IMAGE_FONT, IMAGE_FONT_SIZE):
+        return image_out_path
+    return None
+
+@task.python
+def create_stream(thumbnail_file):
+    ingestion = youtube.create_stream(STREAM_TITLE, STREAM_DESCRIPTION, thumbnail_file, 'public')
     if ingestion == None:
         print("Stream not created")
         raise AirflowSkipException
@@ -130,12 +148,14 @@ with models.DAG(
     
     create_playlist_task = create_video_playlist(VIDEO_SOURCE_PATH, VIDEO_PLAYLIST)
     video_duration_task = calc_video_duration(create_playlist_task)
-    rtmps_addr_task = create_stream()
+    thumbnail_addr_task = create_thumbnail()
+    rtmps_addr_task = create_stream(thumbnail_addr_task)
     ffmpeg_task = run_ffmpeg_stream(rtmps_addr_task, VIDEO_PLAYLIST, AUDIO_PLAYLIST, video_duration_task)
     delete_files_task = delete_used_files(create_playlist_task)
 
     create_playlist_task >> video_duration_task
-    video_duration_task >> rtmps_addr_task
+    video_duration_task >> thumbnail_addr_task
+    thumbnail_addr_task >> rtmps_addr_task
     rtmps_addr_task >> ffmpeg_task
     ffmpeg_task >> delete_files_task
 
