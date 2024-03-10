@@ -6,6 +6,8 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+
 
 APP_TOKEN_FILE = "youtube_streamer/youtube_secret.json"
 USER_TOKEN_FILE = "youtube_streamer/user_token.json"
@@ -14,10 +16,18 @@ SCOPES = [
 ]
 
 def set_broadcast_thumbnail(youtube, broadcast_id, thumbnail):
+    """
     youtube.thumbnails().set(
         videoId=broadcast_id,
         media_body=thumbnail
     ).execute()
+    """
+    request = youtube.thumbnails().set(
+        videoId=broadcast_id,
+        media_body=MediaFileUpload(thumbnail, mimetype='image/jpeg')
+    )
+    response = request.execute()
+    
     print("Thumbnail successfully set for the broadcast.")
 
 def get_broadcast_info(youtube, broadcast_id):
@@ -129,6 +139,7 @@ def create_stream(title, description, thumbnail, privacyStatus="private"):
     insert_broadcast_response = insert_broadcast(service, title, description, privacyStatus)
     broadcast_id = insert_broadcast_response["id"]
     set_broadcast_thumbnail(service, broadcast_id, thumbnail)
+    return
     insert_stream_response = insert_stream(service, title, description)
     stream_id = insert_stream_response["id"]
     bind_broadcast_and_stream(service, broadcast_id, stream_id)

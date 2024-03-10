@@ -2,11 +2,11 @@ import lib.youtube.stream as youtube
 import lib.helper as helper
 import lib.image.modifier as image
 
-TITLE = "СВОДКА НОВОСТЕЙ"
-DESCRIPTION = "Самые актуальные новости на данный момент"
-THUMBNAIL_FILE = "youtube_streamer/masa_stream.png"
 
 def test_youtube_stream():
+    TITLE = "СВОДКА НОВОСТЕЙ"
+    DESCRIPTION = "Самые актуальные новости на данный момент"
+    THUMBNAIL_FILE = "youtube_streamer/images/masa_stream.png"
     ingestion = youtube.create_stream(TITLE, DESCRIPTION, THUMBNAIL_FILE, "public")
     print(ingestion)
 
@@ -25,8 +25,9 @@ def test_text_image():
     return None
 
 if __name__ == '__main__':
-    img_path = test_text_image()
-    print(img_path)
+    test_youtube_stream()
+    #img_path = test_text_image()
+    #print(img_path)
     
     
    
