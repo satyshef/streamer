@@ -21,7 +21,7 @@ CLIP_DURATION = 9
 
 VIDEO_SOURCE_PATH = "video/masa_live_1920_1080"
 VIDEO_PLAYLIST = "stream_list/videolist_disposable.txt"
-AUDIO_PLAYLIST = "stream_list/audiolist_dynamic.txt"
+AUDIO_PLAYLIST = "stream_list/audiolist_disposable.txt"
 
 STREAM_TITLE = "СВОДКА НОВОСТЕЙ"
 STREAM_DESCRIPTION = "Самые актуальные новости на данный момент"
@@ -63,7 +63,8 @@ def create_video_playlist(video_dir, playlist_path):
     # записываем в плейлист
     with open(playlist_path, 'w') as playlist_file:
         playlist_file.write('ffconcat version 1.0\n')
-        playlist_file.write('file \'intro.mp4\'\n')
+        # add intro
+        #playlist_file.write('file \'intro.mp4\'\n')
         for file in file_list:
             if file.endswith(".mp4"):  # adjust file extension as needed
                 playlist_file.write(f"file '{video_dir}/{file}'\n")
