@@ -19,7 +19,7 @@ INTERVAL = 60 # min
 MIN_VIDEO_DURATION = 90 # какая минимальная длительность видео для стрима в секундах
 
 
-VIDEO_SOURCE_PATH = "video/test"
+VIDEO_SOURCE_PATH = "video/masa_live_1920_1080"
 VIDEO_PLAYLIST = "stream_list/videolist_disposable.txt"
 AUDIO_PLAYLIST = "stream_list/audiolist_dynamic.txt"
 
