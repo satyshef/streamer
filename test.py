@@ -25,9 +25,9 @@ def test_text_image():
     return None
 
 if __name__ == '__main__':
-    lst = helper.get_files_list('/Users/outsider/Downloads/newsvideo/export', ['mp4'])
-    #test_youtube_stream()
-    img_path = test_text_image()
+    #lst = helper.get_files_list('/Users/outsider/Downloads/newsvideo/export', ['mp4'])
+    test_youtube_stream()
+    #img_path = test_text_image()
     #print(lst)
     
     
