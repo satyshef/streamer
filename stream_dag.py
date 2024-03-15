@@ -63,9 +63,9 @@ def create_video_playlist(video_dir, playlist_path):
         # add intro
         #playlist_file.write('file \'intro.mp4\'\n')
         for file in file_list:
-            if file.endswith(".mp4"):  # adjust file extension as needed
-                playlist_file.write(f"file '{video_dir}/{file}'\n")
-                result.append(f"{video_dir}/{file}")
+            #if file.endswith(".mp4"):  # adjust file extension as needed
+            playlist_file.write(f"file '{video_dir}/{file}'\n")
+            result.append(f"{video_dir}/{file}")
         #playlist_file.write("file 'videolist.txt'\n")
                 
     return result
@@ -95,7 +95,8 @@ def create_thumbnail():
         if len(image_list) == 0:
             print("Empty thumbnail list")
             raise AirflowSkipException
-        image_input_path = random.choice(image_list)
+        image_file = random.choice(image_list)
+        image_input_path = f"'{VIDEO_SOURCE_PATH}/{image_file}'"
     
     image_out_path = IMAGE_RESULT_DIR + helper.generate_filename(image_input_path)
     # Пример использования функции
