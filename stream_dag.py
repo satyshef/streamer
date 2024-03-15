@@ -16,21 +16,21 @@ from airflow.operators.docker_operator import DockerOperator
 
 # Ключевые настройки
 DATA_DIR = './data'
-INTERVAL = 60 # min
-MIN_VIDEO_DURATION = 90 # какая минимальная длительность видео для стрима в секундах
-CLIP_DURATION = 9
+INTERVAL = 120 # min
+MIN_VIDEO_DURATION = 120 # какая минимальная длительность видео для стрима в секундах
+CLIP_DURATION = 11
 
-VIDEO_SOURCE_PATH = "video/masa_live_1920_1080"
+SOURCE_DIR = "video/masa_live_1920_1080"
 VIDEO_PLAYLIST = "stream_list/videolist_disposable.txt"
 AUDIO_PLAYLIST = "stream_list/audiolist_disposable.txt"
 
-STREAM_TITLE = "СВОДКА НОВОСТЕЙ"
-STREAM_DESCRIPTION = "Самые актуальные новости на данный момент"
+STREAM_TITLE = "Хроника дня"
+STREAM_DESCRIPTION = "Все актуальные новости на текущий момент"
 #STREAM_THUMBNAIL_FILE = "youtube_streamer/masa_chronicle.png"
 
 # настройки обложки
 IMAGE_FONT = 'youtube_streamer/fonts/Geist-UltraBlack.otf'
-IMAGE_FONT_SIZE = 80
+IMAGE_FONT_SIZE = 70
 #IMAGE_INPUT_PATH = 'youtube_streamer/images/masa_chronicle.png'
 IMAGE_INPUT_PATH = ''
 IMAGE_RESULT_DIR = 'images/'
@@ -90,24 +90,31 @@ def create_thumbnail():
     # Если указан IMAGE_INPUT_PATH применяем его иначе берем случайное изображение из директории с видеофрагментами
     if IMAGE_INPUT_PATH != '':
         image_input_path = IMAGE_INPUT_PATH 
+        x_pos = 0
+        y_pos = 0
     else:
-        image_list = helper.get_files_list(VIDEO_SOURCE_PATH, ['png', 'jpeg', 'jpg'])
+        image_list = helper.get_files_list(SOURCE_DIR, ['png', 'jpeg', 'jpg'])
         if len(image_list) == 0:
             print("Empty thumbnail list")
             raise AirflowSkipException
         image_file = random.choice(image_list)
-        image_input_path = f"{VIDEO_SOURCE_PATH}/{image_file}"
+        image_input_path = f"{SOURCE_DIR}/{image_file}"
+        # если обложка из директории с исходниками тогда дату размещаем вверху
+        x_pos = 0
+        y_pos = -300
     
     image_out_path = IMAGE_RESULT_DIR + helper.generate_filename(image_input_path)
     # Пример использования функции
-    text = helper.get_formated_time(format=None, round=False, timezone=TIMEZONE)
-    if image.place_text_center(image_input_path, image_out_path, text, IMAGE_FONT, IMAGE_FONT_SIZE):
+    time = helper.get_formated_time(format=None, round=False, timezone=TIMEZONE)
+    if image.place_text(input_path=image_input_path, output_path=image_out_path, text=time, x_pos=x_pos, y_pos=y_pos, font_path=IMAGE_FONT, font_size=IMAGE_FONT_SIZE):
         return image_out_path
     return None
 
 @task.python
 def create_stream(thumbnail_file):
-    ingestion = youtube.create_stream(STREAM_TITLE, STREAM_DESCRIPTION, thumbnail_file)
+    time = helper.get_formated_time(format=None, round=False, timezone=TIMEZONE)
+    title = f"{time} - {STREAM_TITLE}"
+    ingestion = youtube.create_stream(title, STREAM_DESCRIPTION, thumbnail_file)
     if ingestion == None:
         print("Stream not created")
         raise AirflowSkipException
@@ -155,7 +162,7 @@ with models.DAG(
     tags=["polihoster", "streamer", "test"],
 ) as dag:
     
-    create_playlist_task = create_video_playlist(VIDEO_SOURCE_PATH, VIDEO_PLAYLIST)
+    create_playlist_task = create_video_playlist(SOURCE_DIR, VIDEO_PLAYLIST)
     video_duration_task = calc_video_duration(create_playlist_task)
     thumbnail_addr_task = create_thumbnail()
     #rtmps_addr_task = create_stream(thumbnail_addr_task)
