@@ -96,7 +96,7 @@ def create_thumbnail():
             print("Empty thumbnail list")
             raise AirflowSkipException
         image_file = random.choice(image_list)
-        image_input_path = f"'{VIDEO_SOURCE_PATH}/{image_file}'"
+        image_input_path = f"{VIDEO_SOURCE_PATH}/{image_file}"
     
     image_out_path = IMAGE_RESULT_DIR + helper.generate_filename(image_input_path)
     # Пример использования функции
