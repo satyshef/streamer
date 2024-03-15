@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 import os
+import random
 
 import streamer.lib.youtube.stream as youtube
 import streamer.lib.helper as helper
@@ -25,12 +26,13 @@ AUDIO_PLAYLIST = "stream_list/audiolist_disposable.txt"
 
 STREAM_TITLE = "СВОДКА НОВОСТЕЙ"
 STREAM_DESCRIPTION = "Самые актуальные новости на данный момент"
-STREAM_THUMBNAIL_FILE = "youtube_streamer/masa_stream.png"
+#STREAM_THUMBNAIL_FILE = "youtube_streamer/masa_chronicle.png"
 
 # настройки обложки
 IMAGE_FONT = 'youtube_streamer/fonts/Geist-UltraBlack.otf'
 IMAGE_FONT_SIZE = 80
-IMAGE_INPUT_PATH = 'youtube_streamer/images/masa_stream.png'
+#IMAGE_INPUT_PATH = 'youtube_streamer/images/masa_chronicle.png'
+IMAGE_INPUT_PATH = ''
 IMAGE_RESULT_DIR = 'images/'
 TIMEZONE = 3
 
@@ -85,10 +87,20 @@ def calc_video_duration(file_list):
 
 @task.python
 def create_thumbnail():
-    image_out_path = IMAGE_RESULT_DIR + helper.generate_filename(IMAGE_INPUT_PATH)
+    # Если указан IMAGE_INPUT_PATH применяем его иначе берем случайное изображение из директории с видеофрагментами
+    if IMAGE_INPUT_PATH != '':
+        image_input_path = IMAGE_INPUT_PATH 
+    else:
+        image_list = helper.get_files_list(VIDEO_SOURCE_PATH, ['png', 'jpeg', 'jpg'])
+        if len(image_list) == 0:
+            print("Empty thumbnail list")
+            raise AirflowSkipException
+        image_input_path = random.choice(image_list)
+    
+    image_out_path = IMAGE_RESULT_DIR + helper.generate_filename(image_input_path)
     # Пример использования функции
     text = helper.get_formated_time(format=None, round=False, timezone=TIMEZONE)
-    if image.place_text_center(IMAGE_INPUT_PATH, image_out_path, text, IMAGE_FONT, IMAGE_FONT_SIZE):
+    if image.place_text_center(image_input_path, image_out_path, text, IMAGE_FONT, IMAGE_FONT_SIZE):
         return image_out_path
     return None
 
