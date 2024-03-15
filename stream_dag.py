@@ -53,13 +53,8 @@ target_datetime = today.strftime("%Y-%m-%d %H:%M:%S")
 
 @task.python
 def create_video_playlist(video_dir, playlist_path):
-    file_list = []
     result = []
-    # проверяем сумарную длительность видео
-    for file in os.listdir(video_dir):
-        file_list.append(file)
-        #file_list.append(os.path.join(video_dir, file))
-    
+    file_list = helper.get_files_list(video_dir, ['mp4'])
     # записываем в плейлист
     with open(playlist_path, 'w') as playlist_file:
         playlist_file.write('ffconcat version 1.0\n')
@@ -92,14 +87,14 @@ def calc_video_duration(file_list):
 def create_thumbnail():
     image_out_path = IMAGE_RESULT_DIR + helper.generate_filename(IMAGE_INPUT_PATH)
     # Пример использования функции
-    text = helper.get_news_time(format=None, round=False, timezone=TIMEZONE)
+    text = helper.get_formated_time(format=None, round=False, timezone=TIMEZONE)
     if image.place_text_center(IMAGE_INPUT_PATH, image_out_path, text, IMAGE_FONT, IMAGE_FONT_SIZE):
         return image_out_path
     return None
 
 @task.python
 def create_stream(thumbnail_file):
-    ingestion = youtube.create_stream(STREAM_TITLE, STREAM_DESCRIPTION, thumbnail_file, 'public')
+    ingestion = youtube.create_stream(STREAM_TITLE, STREAM_DESCRIPTION, thumbnail_file)
     if ingestion == None:
         print("Stream not created")
         raise AirflowSkipException
@@ -109,7 +104,7 @@ def create_stream(thumbnail_file):
 def run_ffmpeg_stream(rtmps_addr, video_playlist, audio_playlist, video_duration):
     ffmpeg_command = [
         "-re", "-f", "concat", "-safe", "0", "-i", video_playlist,
-        "-f", "concat", "-i", audio_playlist,
+        "-re", "-f", "concat", "-i", audio_playlist,
         "-c:v", "copy", "-c:a", "copy",
         "-f", "flv", "-g", "60", "-t", str(video_duration),
         "-flvflags", "no_duration_filesize", rtmps_addr

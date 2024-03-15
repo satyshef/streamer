@@ -12,7 +12,7 @@ def get_current_time(timezone):
     current_datetime = utc_now + target_offset
     return current_datetime
 
-def get_news_time(format=None, round=True, timezone=3):
+def get_formated_time(format=None, round=True, timezone=3):
     # Примените разницу к текущей дате и времени
     current_datetime = get_current_time(timezone)
     # Вычислить разницу в минутах до следующего часа
@@ -61,3 +61,21 @@ def get_file_name(file_path):
     name, _ = os.path.splitext(file_name)
     #r = file_name.rsplit(".")
     return name
+
+def get_files_list(directory_path, extensions):
+    """
+    Функция фильтрует файлы в указанной директории по расширениям.
+
+    Аргументы:
+    directory_path (str): Путь к директории.
+    extensions (list): Список расширений файлов для фильтрации.
+
+    Возвращает:
+    list: Список файлов с указанными расширениями в указанной директории.
+    """
+    filtered_files = []
+    for file in os.listdir(directory_path):
+        if os.path.isfile(os.path.join(directory_path, file)):
+            if any(file.endswith(ext) for ext in extensions):
+                filtered_files.append(file)
+    return filtered_files
