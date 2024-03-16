@@ -173,16 +173,16 @@ with models.DAG(
     
     create_playlist_task = create_video_playlist(SOURCE_DIR, VIDEO_PLAYLIST)
     video_duration_task = calc_video_duration(create_playlist_task)
-    thumbnail_addr_task = create_thumbnail()
-    rtmps_addr_task = create_stream(thumbnail_addr_task)
-    ffmpeg_task = run_ffmpeg_stream(rtmps_addr_task, VIDEO_PLAYLIST, AUDIO_PLAYLIST, video_duration_task)
-    delete_files_task = delete_used_files(create_playlist_task)
+    #thumbnail_addr_task = create_thumbnail()
+    #rtmps_addr_task = create_stream(thumbnail_addr_task)
+    #ffmpeg_task = run_ffmpeg_stream(rtmps_addr_task, VIDEO_PLAYLIST, AUDIO_PLAYLIST, video_duration_task)
+    #delete_files_task = delete_used_files(create_playlist_task)
 
-    create_playlist_task >> video_duration_task
-    video_duration_task >> thumbnail_addr_task
-    thumbnail_addr_task >> rtmps_addr_task
-    rtmps_addr_task >> ffmpeg_task
-    ffmpeg_task >> delete_files_task
+    #create_playlist_task >> video_duration_task
+    #video_duration_task >> thumbnail_addr_task
+    #thumbnail_addr_task >> rtmps_addr_task
+    #rtmps_addr_task >> ffmpeg_task
+    #ffmpeg_task >> delete_files_task
 
     #cleanup_files_task >> 
     #create_playlist_task >> ffmpeg_stream_task >> cleanup_files_task
