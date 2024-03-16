@@ -85,7 +85,7 @@ def calc_video_duration(file_list):
     
     return video_duration
 
-
+@task.python
 def create_thumbnail():
     font_size = IMAGE_FONT_SIZE
     font_path = IMAGE_FONT
@@ -179,10 +179,10 @@ with models.DAG(
     delete_files_task = delete_used_files(create_playlist_task)
 
     create_playlist_task >> video_duration_task
-    #video_duration_task >> thumbnail_addr_task
-    #thumbnail_addr_task >> rtmps_addr_task
-    #rtmps_addr_task >> ffmpeg_task
-    #ffmpeg_task >> delete_files_task
+    video_duration_task >> thumbnail_addr_task
+    thumbnail_addr_task >> rtmps_addr_task
+    rtmps_addr_task >> ffmpeg_task
+    ffmpeg_task >> delete_files_task
 
     #cleanup_files_task >> 
     #create_playlist_task >> ffmpeg_stream_task >> cleanup_files_task
