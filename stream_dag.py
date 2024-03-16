@@ -178,8 +178,8 @@ with models.DAG(
     ffmpeg_task = run_ffmpeg_stream(rtmps_addr_task, VIDEO_PLAYLIST, AUDIO_PLAYLIST, video_duration_task)
     delete_files_task = delete_used_files(create_playlist_task)
 
-    #create_playlist_task >> video_duration_task
-    #video_duration_task >> thumbnail_addr_task
+    create_playlist_task >> video_duration_task
+    video_duration_task >> thumbnail_addr_task
     #thumbnail_addr_task >> rtmps_addr_task
     #rtmps_addr_task >> ffmpeg_task
     #ffmpeg_task >> delete_files_task
