@@ -89,7 +89,7 @@ def calc_video_duration(file_list):
 def create_thumbnail():
     font_size = IMAGE_FONT_SIZE
     font_path = IMAGE_FONT
-
+    return None
     # Если есть основа обложки с текстом то дату размещаем внизу иначе по центру
     image_list = helper.get_files_list(SOURCE_DIR, ['png', 'jpeg', 'jpg'])
     if len(image_list) != 0:
