@@ -15,6 +15,8 @@ def place_text(input_path, output_path, text, x_pos=0, y_pos=0, font_path=None, 
     :param font_path: Путь к файлу шрифта. Если None, используется шрифт по умолчанию.
     :param font_size: Размер шрифта.
     """
+    text_color = 'black'
+    background_color = 'white'
     # Загрузка изображения
     image = Image.open(input_path)
     draw = ImageDraw.Draw(image)
@@ -33,8 +35,11 @@ def place_text(input_path, output_path, text, x_pos=0, y_pos=0, font_path=None, 
         
     x = (image_width - text_width) / 2 + x_pos
     y = (image_height - text_height) / 2 + y_pos
-    # Размещение текста
-    draw.text((x, y), text, font=font, fill="white")
+    # ФОН
+    delta_x = 30
+    delta_y = 10
+    draw.rectangle([x-delta_x, y-delta_y, x + text_width+delta_x, y + text_height + delta_y+4], fill=background_color)
+    draw.text(xy=(x, y), text=text, fill=text_color, font=font,)
 
     
     # Сохранение изображения

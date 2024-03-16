@@ -31,9 +31,9 @@ STREAM_DESCRIPTION = "Все актуальные новости на текущ
 # настройки обложки
 IMAGE_FONT = 'youtube_streamer/fonts/Geist-UltraBlack.otf'
 IMAGE_FONT_SIZE = 70
-#IMAGE_INPUT_PATH = 'youtube_streamer/images/masa_chronicle.png'
-IMAGE_INPUT_PATH = ''
-IMAGE_RESULT_DIR = 'images/'
+IMAGE_INPUT_PATH = 'youtube_streamer/images/masa_chronicle.png'
+#IMAGE_INPUT_PATH = ''
+IMAGE_RESULT_DIR = 'thumbnail/'
 TIMEZONE = 3
 
 DAG_ID = "youtube_stream_dag"
@@ -85,39 +85,48 @@ def calc_video_duration(file_list):
     
     return video_duration
 
-@task.python
+
 def create_thumbnail():
-    # Если указан IMAGE_INPUT_PATH применяем его иначе берем случайное изображение из директории с видеофрагментами
-    if IMAGE_INPUT_PATH != '':
-        image_input_path = IMAGE_INPUT_PATH 
-        x_pos = 0
-        y_pos = 0
-    else:
-        image_list = helper.get_files_list(SOURCE_DIR, ['png', 'jpeg', 'jpg'])
-        if len(image_list) == 0:
-            print("Empty thumbnail list")
-            raise AirflowSkipException
+    font_size = IMAGE_FONT_SIZE
+    font_path = IMAGE_FONT
+
+    # Если есть основа обложки с текстом то дату размещаем внизу иначе по центру
+    image_list = helper.get_files_list(SOURCE_DIR, ['png', 'jpeg', 'jpg'])
+    if len(image_list) != 0:
         image_file = random.choice(image_list)
         image_input_path = f"{SOURCE_DIR}/{image_file}"
         # если обложка из директории с исходниками тогда дату размещаем вверху
         x_pos = 0
-        y_pos = -300
+        y_pos = 300
+        font_size = int(font_size * 0.7)
+        #font_path = 'youtube_streamer/fonts/Geist-Light.otf'
+    else:
+        if IMAGE_INPUT_PATH != '':
+            image_input_path = IMAGE_INPUT_PATH 
+            x_pos = 0
+            y_pos = 0
+        else:
+            # Если нет основы для обложки то останавливаем. Если продолжить будет установлена обложка канала
+            print("Empty thumbnail list")
+            raise AirflowSkipException
     
     image_out_path = IMAGE_RESULT_DIR + helper.generate_filename(image_input_path)
     # Пример использования функции
     time = helper.get_formated_time(format=None, round=False, timezone=TIMEZONE)
-    if image.place_text(input_path=image_input_path, output_path=image_out_path, text=time, x_pos=x_pos, y_pos=y_pos, font_path=IMAGE_FONT, font_size=IMAGE_FONT_SIZE):
+    if image.place_text(input_path=image_input_path, output_path=image_out_path, text=time, x_pos=x_pos, y_pos=y_pos, font_path=font_path, font_size=font_size):
         return image_out_path
     return None
+
 
 @task.python
 def create_stream(thumbnail_file):
     time = helper.get_formated_time(format=None, round=False, timezone=TIMEZONE)
     title = f"{time} - {STREAM_TITLE}"
-    ingestion = youtube.create_stream(title, STREAM_DESCRIPTION, thumbnail_file)
+    ingestion = youtube.create_stream(title, STREAM_DESCRIPTION, thumbnail_file, privacyStatus='public')
     if ingestion == None:
         print("Stream not created")
         raise AirflowSkipException
+    os.remove(thumbnail_file)
     return ingestion
 
 @task.python
