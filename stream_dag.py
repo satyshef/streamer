@@ -167,6 +167,7 @@ with models.DAG(
     schedule=timedelta(minutes=INTERVAL),
     start_date=datetime(2024, 3, 17, 4, 0, 0),
     catchup=False,
+    description='Стрим телеграм новостей',
     tags=["polihoster", "streamer", "test"],
 ) as dag:
     
