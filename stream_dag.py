@@ -17,7 +17,7 @@ from airflow.operators.docker_operator import DockerOperator
 # Ключевые настройки
 DATA_DIR = './data'
 INTERVAL = 120 # min
-MIN_VIDEO_DURATION = 60 # какая минимальная длительность видео для стрима в секундах
+MIN_VIDEO_DURATION = 120 # какая минимальная длительность видео для стрима в секундах
 CLIP_DURATION = 11
 
 SOURCE_DIR = "video/masa_live_1920_1080"
@@ -120,7 +120,7 @@ def create_thumbnail():
 @task.python
 def create_stream(thumbnail_file):
     time = helper.get_formated_time(format=None, round=False, timezone=TIMEZONE)
-    title = f"{time} - {STREAM_TITLE}"
+    title = f"{STREAM_TITLE} - {time}"
     ingestion = youtube.create_stream(title, STREAM_DESCRIPTION, thumbnail_file, 'public')
     if ingestion == None:
         print("Stream not created")
@@ -165,7 +165,7 @@ def delete_used_files(file_list):
 with models.DAG(
     DAG_ID,
     schedule=timedelta(minutes=INTERVAL),
-    start_date=datetime(2023, 1, 1),
+    start_date=datetime(2024, 3, 17, 3, 0, 0),
     catchup=False,
     tags=["polihoster", "streamer", "test"],
 ) as dag:
@@ -175,13 +175,13 @@ with models.DAG(
     thumbnail_addr_task = create_thumbnail()
     rtmps_addr_task = create_stream(thumbnail_addr_task)
     ffmpeg_task = run_ffmpeg_stream(rtmps_addr_task, VIDEO_PLAYLIST, AUDIO_PLAYLIST, video_duration_task)
-    #delete_files_task = delete_used_files(create_playlist_task)
+    delete_files_task = delete_used_files(create_playlist_task)
 
     create_playlist_task >> video_duration_task
     video_duration_task >> thumbnail_addr_task
     thumbnail_addr_task >> rtmps_addr_task
     rtmps_addr_task >> ffmpeg_task
-    #ffmpeg_task >> delete_files_task
+    ffmpeg_task >> delete_files_task
 
     #cleanup_files_task >> 
     #create_playlist_task >> ffmpeg_stream_task >> cleanup_files_task

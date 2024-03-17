@@ -78,4 +78,4 @@ def get_files_list(directory_path, extensions):
         if os.path.isfile(os.path.join(directory_path, file)):
             if any(file.endswith(ext) for ext in extensions):
                 filtered_files.append(file)
-    return filtered_files
+    return filtered_files.sort()
