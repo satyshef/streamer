@@ -165,7 +165,7 @@ def delete_used_files(file_list):
 with models.DAG(
     DAG_ID,
     schedule=timedelta(minutes=INTERVAL),
-    start_date=datetime(2024, 3, 17, 3, 0, 0),
+    start_date=datetime(2024, 3, 17, 4, 0, 0),
     catchup=False,
     tags=["polihoster", "streamer", "test"],
 ) as dag:
