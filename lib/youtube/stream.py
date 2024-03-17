@@ -44,7 +44,7 @@ def get_broadcast_info(youtube, broadcast_id):
         return None
 
 def insert_broadcast(youtube, title, description, privacyStatus="private"):
-    scheduled_start_time = datetime.datetime.utcnow().isoformat()
+    scheduled_start_time = datetime.utcnow().isoformat()
     insert_broadcast_response = youtube.liveBroadcasts().insert(
         part="snippet,status,contentDetails",
         body=dict(
