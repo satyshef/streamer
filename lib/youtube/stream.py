@@ -1,5 +1,5 @@
 import os
-import datetime
+import datetime as datetime
 import json
 
 from google.auth.transport.requests import Request
