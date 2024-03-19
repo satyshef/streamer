@@ -16,7 +16,7 @@ from airflow.operators.docker_operator import DockerOperator
 
 # Ключевые настройки
 DATA_DIR = './data'
-INTERVAL = 120 # min
+INTERVAL = 180 # min
 MIN_VIDEO_DURATION = 120 # какая минимальная длительность видео для стрима в секундах
 CLIP_DURATION = 11
 
@@ -165,7 +165,7 @@ def delete_used_files(file_list):
 with models.DAG(
     DAG_ID,
     schedule=timedelta(minutes=INTERVAL),
-    start_date=datetime(2024, 3, 17, 4, 0, 0),
+    start_date=datetime(2024, 3, 19, 18, 0, 0),
     catchup=False,
     description='Стрим телеграм новостей',
     tags=["polihoster", "streamer", "test"],
